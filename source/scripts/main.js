@@ -4,7 +4,6 @@ let runnerCanvas = document.getElementById('runner');
 let runnerContext = runnerCanvas.getContext('2d');
 
 let timeCount = true; //Отвечает за паузы между рендерингом
-let personageY = 0; // Текущее положение персонажа по оси Y
 
 function grass(){
     runnerContext.fillStyle = '#025415';
@@ -12,30 +11,22 @@ function grass(){
 }
 
 let personage = {
+
+    oldPosition: { // Показывает старое положение персонажа по оси Y
+        y: 0,
+
+        addValue(){
+            this.y = personage.currentPosition.bodyY;
+        },
+    },
     
     currentPosition: { // Показывает текущюю позицию каждого елемента персонажа
         bodyX: 0,
         bodyY: 0,
 
-        eyesRightX: 0,
-        eyesLeftX:  0,
-        eyesY:      0,
-
-        legRightX: 0,
-        legLeftX:  0,
-        legY:      0,
-
         addValue(){
             this.bodyX = personage.body.x;
             this.bodyY = personage.body.y;
-    
-            this.eyesRightX = personage.eyes.rightX;
-            this.eyesLeftX  = personage.eyes.leftX;
-            this.eyesY      = personage.eyes.y;
-    
-            this.legRightX = personage.leg.rightX;
-            this.legLeftX  = personage.leg.leftX;
-            this.legY      = personage.leg.y;
         },
     },
 
@@ -97,10 +88,6 @@ let personage = {
             runnerContext.fillStyle = this.color;
             runnerContext.fillRect(this.leftX, this.y, this.width, this.heihgt);
             runnerContext.fillRect(this.rightX, this.y, this.width, this.heihgt);
-
-            personage.currentPosition.eyesRightX = this.rightX;
-            personage.currentPosition.eyesLeftX  = this.leftX;
-            personage.currentPosition.eyesY      = this.y;
         },
     },
 
@@ -140,10 +127,6 @@ let personage = {
             runnerContext.fillStyle = this.color;
             runnerContext.fillRect(this.leftX, this.y, this.width, this.leftHeihgt);
             runnerContext.fillRect(this.rightX, this.y, this.width, this.rightHeihgt);
-
-            personage.currentPosition.legRightX = this.rightX;
-            personage.currentPosition.legLeftX  = this.leftX;
-            personage.currentPosition.legY      = this.y;
         },
     },
 
@@ -152,7 +135,6 @@ let personage = {
         this.leg.render();
         this.eyes.render();
 
-        personageY = personage.currentPosition.bodyY;
     },
 
     moveLeft(){
@@ -237,8 +219,6 @@ let personage = {
                 
                 this.render();
                 grass();
-            } else {
-                return false;
             }
         }, 70)
     },
@@ -278,8 +258,6 @@ let personage = {
 
                 this.render();
                 grass();
-            } else {
-                return false;
             }
         }, 70)
     },
@@ -292,12 +270,13 @@ let personage = {
 grass();
 personage.render();
 personage.body.moveBody();
+personage.oldPosition.addValue();
 
 document.onkeydown = (event)=>{
     if(timeCount){
         timeCount = false;
 
-        switch (event.keyCode) {
+        switch (event.keyCode) { //Движение влево по нажатию на стрелку
             case 37:
                 
                 if(personage.currentPosition.bodyX < 5){
@@ -309,19 +288,38 @@ document.onkeydown = (event)=>{
                 }
                 break;
             
-            case 38:
+            case 38: //Прижок по нажатию на стрелку
 
-                if(personage.currentPosition.bodyY == personageY){
-                    personage.jumpUp();
+                if(personage.eyes.position == 'left'){
+                    if(personage.currentPosition.bodyX < 45){
+                        console.log('Прижок не возможен. Край карты слишком близко!');
+                    } else{
+                        if(personage.oldPosition.y == personage.currentPosition.bodyY){
+                            personage.jumpUp();
+        
+                            setTimeout(()=>{
+                                personage.jumpDowm();
+                            }, 390)
+                        }
+                    }
+                } else{
 
-                    setTimeout(()=>{
-                        personage.jumpDowm();
-                    }, 390)
+                    if((personage.currentPosition.bodyX > runnerCanvas.getAttribute('width') - 90)){
+                        console.log('Прижок не возможен. Край карты слишком близко!');
+                    } else{
+                        if(personage.oldPosition.y == personage.currentPosition.bodyY){
+                            personage.jumpUp();
+        
+                            setTimeout(()=>{
+                                personage.jumpDowm();
+                            }, 390)
+                        }
+                    }
                 }
 
                 break;
 
-            case 39:
+            case 39: // Движение вправо по нажатию на стрелку
 
                 if(personage.currentPosition.bodyX > runnerCanvas.getAttribute('width') - personage.body.width - 10){
 
