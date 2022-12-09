@@ -1,36 +1,47 @@
 'use strict'
 
+import per from "../scripts/personage.js";
+
 let runnerCanvas = document.getElementById('runner');
 let runnerContext = runnerCanvas.getContext('2d');
 
 let timeCount = true; //Отвечает за паузы между рендерингом
 
-function grass(){
-    runnerContext.fillStyle = '#025415';
-    runnerContext.fillRect(0, 580, 1000, 50);
+function clearCanvas(){
+    runnerContext.clearRect(0, 0, runnerCanvas.offsetWidth, runnerCanvas.offsetHeight);
 }
 
-let personage = {
+function renderCanvas(){
+    grassMain();
+    listGrass.map(item => item.render(runnerContext));
+}
+
+function grassMain(){
+    runnerContext.fillStyle = '#025415';
+    runnerContext.fillRect(0, 580, 880, 50);
+}
+
+let hero = {
 
     oldPosition: { // Показывает старое положение персонажа по оси Y
         y: 0,
 
         addValue(){
-            this.y = personage.currentPosition.bodyY;
+            this.y = hero.currentPosition.y;
         },
     },
     
     currentPosition: { // Показывает текущюю позицию каждого елемента персонажа
-        bodyX: 0,
-        bodyY: 0,
+        x: 0,
+        y: 0,
 
         addValue(){
-            this.bodyX = personage.body.x;
-            this.bodyY = personage.body.y;
+            this.x = hero.body.x;
+            this.y = hero.body.y;
         },
     },
 
-    body: {
+    body: { // Тело героя
 
         color: '#0474ba',
         x: 10,
@@ -38,30 +49,39 @@ let personage = {
         width: 33,
         height: 30,
 
-        moveBody(){
-            setInterval(()=>{
-                setTimeout(()=>{
-                    runnerContext.clearRect(0, 0, runnerCanvas.offsetWidth, runnerCanvas.offsetHeight);
-                    this.y += 2;
-                    personage.render();
-                    grass();
-                }, 400);
+        moveBody(){ //Движения тела
 
-                setTimeout(()=>{
-                    runnerContext.clearRect(0, 0, runnerCanvas.offsetWidth, runnerCanvas.offsetHeight);
-                    this.y -= 2;
-                    personage.render();
-                    grass();
-                }, 600);
-            }, 1000)
+            setTimeout(()=>{
+
+                clearCanvas();
+
+                this.y += 2;
+
+                renderCanvas();
+
+                hero.render();
+
+            }, 400);
+
+            setTimeout(()=>{
+
+                clearCanvas();
+
+                this.y -= 2;
+
+                renderCanvas();
+
+                hero.render();
+
+            }, 600);
         },
 
         render(){
             runnerContext.fillStyle = this.color;
             runnerContext.fillRect(this.x, this.y, this.width, this.height);
 
-            personage.currentPosition.bodyX = this.x;
-            personage.currentPosition.bodyY = this.y;
+            hero.currentPosition.x = this.x;
+            hero.currentPosition.y = this.y;
         },
     },
 
@@ -134,7 +154,6 @@ let personage = {
         this.body.render();
         this.leg.render();
         this.eyes.render();
-
     },
 
     moveLeft(){
@@ -157,7 +176,7 @@ let personage = {
         this.currentPosition.addValue();
 
         this.render();
-        grass();
+        grassMain();
     },
 
     moveRight(){
@@ -180,7 +199,7 @@ let personage = {
         this.currentPosition.addValue();
 
         this.render();
-        grass();
+        grassMain();
     },
 
     jumpUp(){
@@ -218,7 +237,8 @@ let personage = {
                 this.currentPosition.addValue();
                 
                 this.render();
-                grass();
+                renderCanvas();
+
             }
         }, 70)
     },
@@ -257,7 +277,8 @@ let personage = {
                 this.currentPosition.addValue();
 
                 this.render();
-                grass();
+                renderCanvas();
+
             }
         }, 70)
     },
@@ -267,10 +288,10 @@ let personage = {
     }
 }
 
-grass();
-personage.render();
-personage.body.moveBody();
-personage.oldPosition.addValue();
+grassMain();
+hero.render();
+hero.body.moveBody();
+hero.oldPosition.addValue();
 
 document.onkeydown = (event)=>{
     if(timeCount){
@@ -279,39 +300,40 @@ document.onkeydown = (event)=>{
         switch (event.keyCode) { //Движение влево по нажатию на стрелку
             case 37:
                 
-                if(personage.currentPosition.bodyX < 5){
+                if(hero.currentPosition.x < 5){
 
                     console.log('Край карты');
                 } else{
+                    contactGrass()
     
-                    personage.moveLeft();
+                    hero.moveLeft();
                 }
                 break;
             
             case 38: //Прижок по нажатию на стрелку
 
-                if(personage.eyes.position == 'left'){
-                    if(personage.currentPosition.bodyX < 45){
+                if(hero.eyes.position == 'left'){
+                    if(hero.currentPosition.x < 45){
                         console.log('Прижок не возможен. Край карты слишком близко!');
                     } else{
-                        if(personage.oldPosition.y == personage.currentPosition.bodyY){
-                            personage.jumpUp();
-        
+                        if(hero.oldPosition.y == hero.currentPosition.y){
+                            hero.jumpUp();
+                            contactGrass()
                             setTimeout(()=>{
-                                personage.jumpDowm();
+                                hero.jumpDowm();
                             }, 390)
                         }
                     }
                 } else{
 
-                    if((personage.currentPosition.bodyX > runnerCanvas.getAttribute('width') - 90)){
+                    if((hero.currentPosition.x > runnerCanvas.getAttribute('width') - 90)){
                         console.log('Прижок не возможен. Край карты слишком близко!');
                     } else{
-                        if(personage.oldPosition.y == personage.currentPosition.bodyY){
-                            personage.jumpUp();
-        
+                        if(hero.oldPosition.y == hero.currentPosition.y){
+                            hero.jumpUp();
+                            contactGrass()
                             setTimeout(()=>{
-                                personage.jumpDowm();
+                                hero.jumpDowm();
                             }, 390)
                         }
                     }
@@ -321,19 +343,74 @@ document.onkeydown = (event)=>{
 
             case 39: // Движение вправо по нажатию на стрелку
 
-                if(personage.currentPosition.bodyX > runnerCanvas.getAttribute('width') - personage.body.width - 10){
+                if(hero.currentPosition.x > runnerCanvas.getAttribute('width') - hero.body.width - 10){
 
                     console.log('Край карты');
                 } else{
+                    contactGrass()
     
-                    personage.moveRight();
+                    hero.moveRight();
                 }   
             
                 break;
         }
+        renderCanvas();
 
         setTimeout(()=>{
             timeCount = true;
         }, 100)
     }
 }
+ 
+function obstacles(){
+
+}
+
+class Obstacles {
+    constructor(id, color, x, y, width, height){
+        this.height = height;
+        this.width = width;
+        this.color = color;
+        this.x = x;
+        this.y = y;
+        this.id = id;
+    }
+
+    move = ()=>{
+        this.y += 5;   
+    }
+
+    render = (canvas)=>{
+        canvas.fillStyle = this.color;
+        canvas.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+let listGrass = []
+
+let grass1 = new Obstacles(1,'#025415', 50, 560, 80, 20);
+let grass2 = new Obstacles(2,'#025415', 130, 570, 50, 20);
+let grass3 = new Obstacles(3,'#025415', 180, 560, 700, 20);
+listGrass.push(grass1);
+listGrass.push(grass2);
+listGrass.push(grass3);
+
+function contactGrass(){
+    console.log(hero.currentPosition);
+    for(let i = 0; i < listGrass.length; i++){
+        if(hero.currentPosition.y + 12 == listGrass[i].y && hero.currentPosition.x == listGrass[i].x){
+            console.log(true);
+        }
+        if(hero.currentPosition.x == listGrass[i].x){
+            console.log(false);
+        }
+    }
+}
+
+setInterval(()=>{
+    renderCanvas();
+    hero.render();
+    hero.body.moveBody();
+    hero.oldPosition.addValue(); 
+}, 1000)
+

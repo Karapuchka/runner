@@ -60,6 +60,16 @@ function scripts(){
         .pipe(browserSync.stream())
 }
 
+function scriptsTwo(){
+    return src([               
+            'source/scripts/Personage.js',  
+        ])
+        .pipe(concat('Personage.js'))
+        .pipe(uglify())
+        .pipe(dest('dist/scripts'))
+        .pipe(browserSync.stream())
+}
+
 function fonts(){
     return src('source/fonts/**/*')
            .pipe(dest('dist/fonts'))
@@ -90,7 +100,7 @@ function imgWebp(){
            .pipe(browserSync.stream())
 }
 
-const start  = series(cleanDist, html, styles, scripts, images, fonts, parallel(browsersync, watching));
+const start  = series(cleanDist, html, styles, scripts, scriptsTwo, images, fonts, parallel(browsersync, watching));
 
 exports.browsersync = browsersync;
 exports.cleanDist   = cleanDist;
@@ -101,5 +111,6 @@ exports.styles      = styles;
 exports.images      = images;
 exports.fonts       = fonts;
 exports.html        = html;
+exports.scriptsTwo        = scriptsTwo;
 
 exports.start       = start;
